@@ -1,0 +1,328 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Котики ищут дом ♡</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #fbf3f3;
+            color: #69545c;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 38px;
+            color: #a87989;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: #a58c94;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .count {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 9px 20px;
+            background: #f2dce3;
+            color: #a36e81;
+            border-radius: 30px;
+            font-size: 14px;
+        }
+
+        .cats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 25px;
+        }
+
+        .cat-card {
+            background: #fffdfd;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #f2e4e7;
+            box-shadow: 0 6px 18px rgba(153, 111, 128, 0.08);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .cat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(153, 111, 128, 0.15);
+        }
+
+        .cat-img-wrapper {
+            height: 230px;
+            position: relative;
+            background: #f3e4e8;
+            overflow: hidden;
+        }
+
+        .cat-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .cat-card:hover .cat-img {
+            transform: scale(1.04);
+        }
+
+        .image-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 45px;
+        }
+
+        .favorite {
+            position: absolute;
+            top: 13px;
+            right: 13px;
+            background: #fff8fa;
+            color: #c47d91;
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            box-shadow: 0 3px 10px #00000012;
+        }
+
+        .cat-info {
+            padding: 19px;
+        }
+
+        .name-age {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .cat-name {
+            font-size: 22px;
+            color: #987080;
+        }
+
+        .cat-age {
+            font-size: 13px;
+            color: #ad929c;
+            white-space: nowrap;
+        }
+
+        .rating {
+            margin-bottom: 13px;
+            color: #d6a1a9;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .rate-value {
+            color: #b69aa2;
+            font-size: 12px;
+            letter-spacing: 0;
+            margin-left: 5px;
+        }
+
+        .description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #826e75;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 17px;
+            padding-top: 12px;
+            border-top: 1px solid #f3e9ec;
+            color: #b69aa2;
+            font-size: 12px;
+        }
+
+        .footer-heart {
+            color: #cf8b9c;
+            font-size: 17px;
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 25px 14px;
+            }
+
+            h1 {
+                font-size: 29px;
+            }
+
+            .cats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header>
+            <h1>маленькие ищут дом ♡</h1>
+            <p class="subtitle">
+                У каждого из них своя история.
+                Возможно, кто-то из них ждёт именно тебя?
+            </p>
+            <div class="count" id="catCount"></div>
+        </header>
+
+        <div class="cats-grid" id="catsContainer"></div>
+
+    </div>
+
+    <script src="cats.js"></script>
+
+    <script>
+        // немного помогаем с возрастом
+        function getAgeWord(age) {
+            if (age % 10 === 1 && age % 100 !== 11) {
+                return "год";
+            }
+
+            if ([2, 3, 4].includes(age % 10) &&
+                ![12, 13, 14].includes(age % 100)) {
+                return "года";
+            }
+
+            return "лет";
+        }
+
+        // рисуем звездочки рейтинга
+        function renderStars(rate) {
+            return "★".repeat(rate) + "☆".repeat(10 - rate);
+        }
+
+        // создаем карточку одного котика
+        function createCatCard(cat) {
+            const card = document.createElement("article");
+            card.className = "cat-card";
+
+            const imgWrapper = document.createElement("div");
+            imgWrapper.className = "cat-img-wrapper";
+
+            const img = document.createElement("img");
+            img.className = "cat-img";
+            img.src = cat.img_link;
+            img.alt = "Котик " + cat.name;
+            img.loading = "lazy";
+
+            img.onerror = function() {
+                this.style.display = "none";
+            };
+
+            imgWrapper.appendChild(img);
+
+            // сердечко для избранных
+            if (cat.favourite) {
+                const badge = document.createElement("div");
+                badge.className = "favorite";
+                badge.textContent = "♡ Избранный";
+                imgWrapper.appendChild(badge);
+            }
+
+            card.appendChild(imgWrapper);
+
+            const info = document.createElement("div");
+            info.className = "cat-info";
+
+            const nameAge = document.createElement("div");
+            nameAge.className = "name-age";
+
+            const name = document.createElement("h2");
+            name.className = "cat-name";
+            name.textContent = cat.name;
+
+            const age = document.createElement("span");
+            age.className = "cat-age";
+            age.textContent = cat.age + " " + getAgeWord(cat.age);
+
+            nameAge.appendChild(name);
+            nameAge.appendChild(age);
+            info.appendChild(nameAge);
+
+            const rating = document.createElement("div");
+            rating.className = "rating";
+
+            const stars = document.createElement("span");
+            stars.textContent = renderStars(cat.rate);
+
+            const rateValue = document.createElement("span");
+            rateValue.className = "rate-value";
+            rateValue.textContent = cat.rate + "/10";
+
+            rating.appendChild(stars);
+            rating.appendChild(rateValue);
+            info.appendChild(rating);
+
+            const description = document.createElement("p");
+            description.className = "description";
+            description.textContent = cat.description;
+            info.appendChild(description);
+
+            const footer = document.createElement("div");
+            footer.className = "card-footer";
+
+            const id = document.createElement("span");
+            id.textContent = "№ " + cat.id;
+            footer.appendChild(id);
+
+            if (cat.favourite) {
+                const heart = document.createElement("span");
+                heart.className = "footer-heart";
+                heart.textContent = "♥";
+                footer.appendChild(heart);
+            }
+
+            info.appendChild(footer);
+            card.appendChild(info);
+
+            return card;
+        }
+
+        // выводим всех котиков на страничку
+        const container = document.getElementById("catsContainer");
+
+        cats.forEach(cat => {
+            container.appendChild(createCatCard(cat));
+        });
+
+        document.getElementById("catCount").textContent =
+    "обрети пушистого друга ♡";
+    </script>
+
+</body>
+</html>
